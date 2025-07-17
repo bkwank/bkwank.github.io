@@ -1,0 +1,198 @@
+<h1 id="-">숲 속 소년 수집 게임 소스 설명서</h1>
+<h2 id="-">목차</h2>
+<ol>
+<li><a href="#개요">개요</a></li>
+<li><a href="#파일-구조">파일 구조</a></li>
+<li><a href="#html-구조">HTML 구조</a></li>
+<li><a href="#css-디자인">CSS 디자인</a></li>
+<li><a href="#javascript-핵심-로직">JavaScript 핵심 로직</a><ul>
+<li><a href="#1-변수-및-기본-설정">변수 및 기본 설정</a></li>
+<li><a href="#2-나무장애물-생성">나무(장애물) 생성</a></li>
+<li><a href="#3-화면-그리기draw">화면 그리기(draw)</a></li>
+<li><a href="#4-게임-업데이트update">게임 업데이트(update)</a></li>
+<li><a href="#5-플레이어-조작">플레이어 조작</a></li>
+<li><a href="#6-게임-재시작">게임 재시작</a></li>
+</ul>
+</li>
+<li><a href="#게임-플레이-방법">게임 플레이 방법</a></li>
+<li><a href="#확장-아이디어">확장 아이디어</a></li>
+</ol>
+<hr>
+<h2 id="-">개요</h2>
+<p><strong>숲 속 소년 수집 게임</strong>은 HTML5 <code>&lt;canvas&gt;</code>와 순수 JavaScript로 구현된 미니게임입니다.\
+플레이어(소년)는 방향키로 움직이며, 숲 속에 흩어진 아이템(✝️, 📖)을 모두 수집해야 합니다.\
+나무(🌲)에 부딪히면 게임 오버가 되고, 모든 아이템을 모으면 게임 클리어입니다.</p>
+<hr>
+<h2 id="-">파일 구조</h2>
+<pre><code>index<span class="hljs-selector-class">.html</span>  (HTML, CSS, JS 올인원 파일)
+</code></pre><hr>
+<h2 id="html-">HTML 구조</h2>
+<pre><code class="lang-html">&lt;<span class="hljs-selector-tag">canvas</span> id=<span class="hljs-string">"game"</span> <span class="hljs-attribute">width</span>=<span class="hljs-string">"480"</span> height=<span class="hljs-string">"320"</span>&gt;&lt;/canvas&gt;
+&lt;<span class="hljs-selector-tag">div</span> id=<span class="hljs-string">"score"</span>&gt;점수: <span class="hljs-number">0</span>&lt;/div&gt;
+&lt;<span class="hljs-selector-tag">div</span> style=<span class="hljs-string">"text-align:center;"</span>&gt;
+  &lt;<span class="hljs-selector-tag">button</span> id=<span class="hljs-string">"restartBtn"</span> style=<span class="hljs-string">"display:none;"</span>&gt;다시 시작하기&lt;/button&gt;
+&lt;/div&gt;
+</code></pre>
+<ul>
+<li><code>canvas#game</code>: 게임이 렌더링되는 화면</li>
+<li><code>div#score</code>: 현재 점수 및 상태 표시</li>
+<li><code>button#restartBtn</code>: 게임 오버/클리어 시 다시 시작 버튼</li>
+</ul>
+<hr>
+<h2 id="css-">CSS 디자인</h2>
+<pre><code class="lang-css"><span class="hljs-selector-tag">body</span> { <span class="hljs-attribute">background</span>: <span class="hljs-number">#b2e59f</span>; <span class="hljs-attribute">margin</span>: <span class="hljs-number">0</span>; }
+<span class="hljs-selector-tag">canvas</span> { <span class="hljs-attribute">display</span>: block; <span class="hljs-attribute">margin</span>: <span class="hljs-number">30px</span> auto; <span class="hljs-attribute">background</span>: <span class="hljs-number">#7ec850</span>; <span class="hljs-attribute">border</span>: <span class="hljs-number">3px</span> solid <span class="hljs-number">#333</span>; }
+<span class="hljs-selector-id">#score</span> { <span class="hljs-attribute">text-align</span>: center; <span class="hljs-attribute">font-size</span>: <span class="hljs-number">1.5em</span>; <span class="hljs-attribute">margin-top</span>: <span class="hljs-number">10px</span>; }
+</code></pre>
+<ul>
+<li>전체적으로 초록색 계열의 숲 느낌 배경</li>
+<li>캔버스 중앙 정렬 및 진한 테두리</li>
+<li>점수 영역은 큰 글씨로 중앙 배치</li>
+</ul>
+<hr>
+<h2 id="javascript-">JavaScript 핵심 로직</h2>
+<h3 id="1-">1. 변수 및 기본 설정</h3>
+<pre><code class="lang-js"><span class="hljs-keyword">const</span> canvas = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'game'</span>);
+<span class="hljs-keyword">const</span> ctx = canvas.getContext(<span class="hljs-string">'2d'</span>);
+<span class="hljs-keyword">const</span> tile = <span class="hljs-number">40</span>;      <span class="hljs-comment">// 한 칸(타일) 크기</span>
+<span class="hljs-keyword">const</span> mapW = canvas.width / tile;  <span class="hljs-comment">// 가로 칸 수</span>
+<span class="hljs-keyword">const</span> mapH = canvas.height / tile; <span class="hljs-comment">// 세로 칸 수</span>
+
+<span class="hljs-comment">// 캐릭터 및 아이템</span>
+<span class="hljs-keyword">const</span> playerEmoji = <span class="hljs-string">'🧒'</span>;
+<span class="hljs-keyword">const</span> crossEmoji = <span class="hljs-string">'✝️'</span>;
+<span class="hljs-keyword">const</span> bibleEmoji = <span class="hljs-string">'📖'</span>;
+
+<span class="hljs-comment">// 플레이어 위치(좌표)</span>
+<span class="hljs-keyword">let</span> player = { x: <span class="hljs-number">2</span>, y: <span class="hljs-number">2</span> };
+
+<span class="hljs-comment">// 아이템 목록(초기값)</span>
+<span class="hljs-keyword">let</span> items = [
+  { x: <span class="hljs-number">6</span>, y: <span class="hljs-number">4</span>, <span class="hljs-keyword">type</span>: <span class="hljs-string">'cross'</span> },
+  { x: <span class="hljs-number">10</span>, y: <span class="hljs-number">2</span>, <span class="hljs-keyword">type</span>: <span class="hljs-string">'bible'</span> },
+  { x: <span class="hljs-number">3</span>, y: <span class="hljs-number">7</span>, <span class="hljs-keyword">type</span>: <span class="hljs-string">'cross'</span> },
+  { x: <span class="hljs-number">8</span>, y: <span class="hljs-number">6</span>, <span class="hljs-keyword">type</span>: <span class="hljs-string">'bible'</span> }
+];
+
+<span class="hljs-keyword">let</span> score = <span class="hljs-number">0</span>;
+<span class="hljs-keyword">let</span> gameOver = <span class="hljs-literal">false</span>;
+<span class="hljs-keyword">const</span> restartBtn = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'restartBtn'</span>);
+</code></pre>
+<hr>
+<h3 id="2-">2. 나무(장애물) 생성</h3>
+<pre><code class="lang-js"><span class="hljs-built_in">let</span> trees = [];
+<span class="hljs-keyword">for</span> (<span class="hljs-built_in">let</span> y = <span class="hljs-number">0</span>; y &lt; mapH; y++) {
+  <span class="hljs-keyword">for</span> (<span class="hljs-built_in">let</span> x = <span class="hljs-number">0</span>; x &lt; mapW; x++) {
+    <span class="hljs-keyword">if</span> (Math.<span class="hljs-built_in">random</span>() &lt; <span class="hljs-number">0.08</span>) trees.<span class="hljs-built_in">push</span>({x, y});
+  }
+}
+</code></pre>
+<ul>
+<li>맵 전체에 확률(8%)로 나무(🌲)를 랜덤 배치</li>
+<li>나무는 움직이지 않으며, 충돌 시 게임 오버</li>
+</ul>
+<hr>
+<h3 id="3-draw-">3. 화면 그리기(draw)</h3>
+<pre><code class="lang-js"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">draw</span>(<span class="hljs-params"></span>) </span>{
+  ctx.clearRect(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, canvas.width, canvas.height);
+  <span class="hljs-comment">// 나무 그리기</span>
+  ctx.font = <span class="hljs-string">'32px serif'</span>;
+  trees.forEach(<span class="hljs-function"><span class="hljs-params">tree</span> =&gt;</span> {
+    ctx.fillText(<span class="hljs-string">'🌲'</span>, tree.x * tile + <span class="hljs-number">8</span>, tree.y * tile + <span class="hljs-number">32</span>);
+  });
+  <span class="hljs-comment">// 아이템 그리기</span>
+  items.forEach(<span class="hljs-function"><span class="hljs-params">item</span> =&gt;</span> {
+    ctx.fillText(item.type === <span class="hljs-string">'cross'</span> ? crossEmoji : bibleEmoji, item.x * tile + <span class="hljs-number">8</span>, item.y * tile + <span class="hljs-number">32</span>);
+  });
+  <span class="hljs-comment">// 플레이어 그리기</span>
+  ctx.fillText(playerEmoji, player.x * tile + <span class="hljs-number">8</span>, player.y * tile + <span class="hljs-number">32</span>);
+}
+</code></pre>
+<hr>
+<h3 id="4-update-">4. 게임 업데이트(update)</h3>
+<pre><code class="lang-js">function update() {
+  <span class="hljs-comment">// 나무와 충돌</span>
+  <span class="hljs-keyword">for</span> (let i = <span class="hljs-number">0</span>; i &lt; trees.length; i++) {
+    <span class="hljs-keyword">if</span> (trees[i].x === <span class="hljs-built_in">player</span>.x &amp;&amp; trees[i].y === <span class="hljs-built_in">player</span>.y) {
+      gameOver = <span class="hljs-literal">true</span>;
+      document.getElementById(<span class="hljs-string">'score'</span>).innerHTML = <span class="hljs-string">'점수: '</span> + <span class="hljs-built_in">score</span> + <span class="hljs-string">'&lt;br&gt;게임 오버!'</span>;
+      restartBtn.style.display = <span class="hljs-string">'inline-block'</span>;
+      return;
+    }
+  }
+  <span class="hljs-comment">// 아이템과 충돌(수집)</span>
+  <span class="hljs-keyword">for</span> (let i = <span class="hljs-built_in">items</span>.length - <span class="hljs-number">1</span>; i &gt;= <span class="hljs-number">0</span>; i--) {
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">items</span>[i].x === <span class="hljs-built_in">player</span>.x &amp;&amp; <span class="hljs-built_in">items</span>[i].y === <span class="hljs-built_in">player</span>.y) {
+      <span class="hljs-built_in">score</span>++;
+      <span class="hljs-built_in">items</span>.splice(i, <span class="hljs-number">1</span>);
+      document.getElementById(<span class="hljs-string">'score'</span>).textContent = <span class="hljs-string">'점수: '</span> + <span class="hljs-built_in">score</span>;
+    }
+  }
+  <span class="hljs-comment">// 모든 아이템 수집 완료</span>
+  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">items</span>.length === <span class="hljs-number">0</span> &amp;&amp; !gameOver) {
+    gameOver = <span class="hljs-literal">true</span>;
+    document.getElementById(<span class="hljs-string">'score'</span>).innerHTML = <span class="hljs-string">'점수: '</span> + <span class="hljs-built_in">score</span> + <span class="hljs-string">'&lt;br&gt;수집완료!'</span>;
+    restartBtn.style.display = <span class="hljs-string">'inline-block'</span>;
+  }
+}
+</code></pre>
+<ul>
+<li>플레이어가 나무에 닿으면 <strong>게임 오버</strong></li>
+<li>아이템을 수집하면 <strong>점수 증가 및 아이템 제거</strong></li>
+<li>모든 아이템을 모으면 <strong>게임 클리어</strong></li>
+</ul>
+<hr>
+<h3 id="5-">5. 플레이어 조작</h3>
+<pre><code class="lang-js">document.addEventListener(<span class="hljs-string">'keydown'</span>, e =&gt; {
+  <span class="hljs-keyword">if</span> (gameOver) return;
+  <span class="hljs-keyword">if</span> (e.key === <span class="hljs-string">'ArrowUp'</span> &amp;&amp; <span class="hljs-built_in">player</span>.y &gt; <span class="hljs-number">0</span>) <span class="hljs-built_in">player</span>.y--;
+  <span class="hljs-keyword">if</span> (e.key === <span class="hljs-string">'ArrowDown'</span> &amp;&amp; <span class="hljs-built_in">player</span>.y &lt; mapH - <span class="hljs-number">1</span>) <span class="hljs-built_in">player</span>.y++;
+  <span class="hljs-keyword">if</span> (e.key === <span class="hljs-string">'ArrowLeft'</span> &amp;&amp; <span class="hljs-built_in">player</span>.x &gt; <span class="hljs-number">0</span>) <span class="hljs-built_in">player</span>.x--;
+  <span class="hljs-keyword">if</span> (e.key === <span class="hljs-string">'ArrowRight'</span> &amp;&amp; <span class="hljs-built_in">player</span>.x &lt; mapW - <span class="hljs-number">1</span>) <span class="hljs-built_in">player</span>.x++;
+  update();
+  draw();
+});
+</code></pre>
+<ul>
+<li>방향키(↑, ↓, ←, →)로 한 칸씩 이동</li>
+<li>이동 후 충돌/수집 여부 체크</li>
+</ul>
+<hr>
+<h3 id="6-">6. 게임 재시작</h3>
+<pre><code class="lang-js">restartBtn.onclick = function() {
+  <span class="hljs-comment">// 게임 상태 초기화</span>
+  player = { <span class="hljs-string">x:</span> <span class="hljs-number">2</span>, <span class="hljs-string">y:</span> <span class="hljs-number">2</span> };
+  items = [
+    { <span class="hljs-string">x:</span> <span class="hljs-number">6</span>, <span class="hljs-string">y:</span> <span class="hljs-number">4</span>, <span class="hljs-string">type:</span> <span class="hljs-string">'cross'</span> },
+    { <span class="hljs-string">x:</span> <span class="hljs-number">10</span>, <span class="hljs-string">y:</span> <span class="hljs-number">2</span>, <span class="hljs-string">type:</span> <span class="hljs-string">'bible'</span> },
+    { <span class="hljs-string">x:</span> <span class="hljs-number">3</span>, <span class="hljs-string">y:</span> <span class="hljs-number">7</span>, <span class="hljs-string">type:</span> <span class="hljs-string">'cross'</span> },
+    { <span class="hljs-string">x:</span> <span class="hljs-number">8</span>, <span class="hljs-string">y:</span> <span class="hljs-number">6</span>, <span class="hljs-string">type:</span> <span class="hljs-string">'bible'</span> }
+  ];
+  score = <span class="hljs-number">0</span>;
+  <span class="hljs-comment">// 나무 재생성</span>
+  trees = [];
+  <span class="hljs-keyword">for</span> (let y = <span class="hljs-number">0</span>; y &lt; mapH; y++) {
+    <span class="hljs-keyword">for</span> (let x = <span class="hljs-number">0</span>; x &lt; mapW; x++) {
+      <span class="hljs-keyword">if</span> (Math.random() &lt; <span class="hljs-number">0.08</span>) trees.push({x, y});
+    }
+  }
+  gameOver = <span class="hljs-literal">false</span>;
+  document.getElementById(<span class="hljs-string">'score'</span>).textContent = <span class="hljs-string">'점수: 0'</span>;
+  restartBtn.style.display = <span class="hljs-string">'none'</span>;
+  draw();
+}
+</code></pre>
+<ul>
+<li>초기 상태로 리셋 후, <strong>다시 시작</strong></li>
+<li>나무(🌲)도 새롭게 랜덤 배치됨</li>
+</ul>
+<hr>
+<h2 id="-">게임 플레이 방법</h2>
+<ol>
+<li><strong>방향키(↑, ↓, ←, →)</strong> 로 소년을 이동합니다.</li>
+<li>숲 속에 흩어진 <strong>아이템(✝️, 📖)</strong> 을 모두 모으세요.</li>
+<li><strong>나무(🌲)</strong> 에 부딪히면 게임 오버입니다.</li>
+<li>모든 아이템을 모으면 클리어!\
+→ &#39;다시 시작하기&#39; 버튼으로 재도전 가능.</li>
+</ol>
+<hr>
