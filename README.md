@@ -1,1 +1,233 @@
-# kwan
+# 숲 속 소년 수집 게임 소스 설명서
+
+## 목차
+
+1. [개요](#개요)
+2. [파일 구조](#파일-구조)
+3. [HTML 구조](#html-구조)
+4. [CSS 디자인](#css-디자인)
+5. [JavaScript 핵심 로직](#javascript-핵심-로직)
+   - [변수 및 기본 설정](#1-변수-및-기본-설정)
+   - [나무(장애물) 생성](#2-나무장애물-생성)
+   - [화면 그리기(draw)](#3-화면-그리기draw)
+   - [게임 업데이트(update)](#4-게임-업데이트update)
+   - [플레이어 조작](#5-플레이어-조작)
+   - [게임 재시작](#6-게임-재시작)
+6. [게임 플레이 방법](#게임-플레이-방법)
+7. [확장 아이디어](#확장-아이디어)
+
+---
+
+## 개요
+
+**숲 속 소년 수집 게임**은 HTML5 `<canvas>`와 순수 JavaScript로 구현된 미니게임입니다.\
+플레이어(소년)는 방향키로 움직이며, 숲 속에 흩어진 아이템(✝️, 📖)을 모두 수집해야 합니다.\
+나무(🌲)에 부딪히면 게임 오버가 되고, 모든 아이템을 모으면 게임 클리어입니다.
+
+---
+
+## 파일 구조
+
+```
+index.html  (HTML, CSS, JS 올인원 파일)
+```
+
+---
+
+## HTML 구조
+
+```html
+<canvas id="game" width="480" height="320"></canvas>
+<div id="score">점수: 0</div>
+<div style="text-align:center;">
+  <button id="restartBtn" style="display:none;">다시 시작하기</button>
+</div>
+```
+
+- `canvas#game`: 게임이 렌더링되는 화면
+- `div#score`: 현재 점수 및 상태 표시
+- `button#restartBtn`: 게임 오버/클리어 시 다시 시작 버튼
+
+---
+
+## CSS 디자인
+
+```css
+body { background: #b2e59f; margin: 0; }
+canvas { display: block; margin: 30px auto; background: #7ec850; border: 3px solid #333; }
+#score { text-align: center; font-size: 1.5em; margin-top: 10px; }
+```
+
+- 전체적으로 초록색 계열의 숲 느낌 배경
+- 캔버스 중앙 정렬 및 진한 테두리
+- 점수 영역은 큰 글씨로 중앙 배치
+
+---
+
+## JavaScript 핵심 로직
+
+### 1. 변수 및 기본 설정
+
+```js
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const tile = 40;      // 한 칸(타일) 크기
+const mapW = canvas.width / tile;  // 가로 칸 수
+const mapH = canvas.height / tile; // 세로 칸 수
+
+// 캐릭터 및 아이템
+const playerEmoji = '🧒';
+const crossEmoji = '✝️';
+const bibleEmoji = '📖';
+
+// 플레이어 위치(좌표)
+let player = { x: 2, y: 2 };
+
+// 아이템 목록(초기값)
+let items = [
+  { x: 6, y: 4, type: 'cross' },
+  { x: 10, y: 2, type: 'bible' },
+  { x: 3, y: 7, type: 'cross' },
+  { x: 8, y: 6, type: 'bible' }
+];
+
+let score = 0;
+let gameOver = false;
+const restartBtn = document.getElementById('restartBtn');
+```
+
+---
+
+### 2. 나무(장애물) 생성
+
+```js
+let trees = [];
+for (let y = 0; y < mapH; y++) {
+  for (let x = 0; x < mapW; x++) {
+    if (Math.random() < 0.08) trees.push({x, y});
+  }
+}
+```
+
+- 맵 전체에 확률(8%)로 나무(🌲)를 랜덤 배치
+- 나무는 움직이지 않으며, 충돌 시 게임 오버
+
+---
+
+### 3. 화면 그리기(draw)
+
+```js
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // 나무 그리기
+  ctx.font = '32px serif';
+  trees.forEach(tree => {
+    ctx.fillText('🌲', tree.x * tile + 8, tree.y * tile + 32);
+  });
+  // 아이템 그리기
+  items.forEach(item => {
+    ctx.fillText(item.type === 'cross' ? crossEmoji : bibleEmoji, item.x * tile + 8, item.y * tile + 32);
+  });
+  // 플레이어 그리기
+  ctx.fillText(playerEmoji, player.x * tile + 8, player.y * tile + 32);
+}
+```
+
+---
+
+### 4. 게임 업데이트(update)
+
+```js
+function update() {
+  // 나무와 충돌
+  for (let i = 0; i < trees.length; i++) {
+    if (trees[i].x === player.x && trees[i].y === player.y) {
+      gameOver = true;
+      document.getElementById('score').innerHTML = '점수: ' + score + '<br>게임 오버!';
+      restartBtn.style.display = 'inline-block';
+      return;
+    }
+  }
+  // 아이템과 충돌(수집)
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].x === player.x && items[i].y === player.y) {
+      score++;
+      items.splice(i, 1);
+      document.getElementById('score').textContent = '점수: ' + score;
+    }
+  }
+  // 모든 아이템 수집 완료
+  if (items.length === 0 && !gameOver) {
+    gameOver = true;
+    document.getElementById('score').innerHTML = '점수: ' + score + '<br>수집완료!';
+    restartBtn.style.display = 'inline-block';
+  }
+}
+```
+
+- 플레이어가 나무에 닿으면 **게임 오버**
+- 아이템을 수집하면 **점수 증가 및 아이템 제거**
+- 모든 아이템을 모으면 **게임 클리어**
+
+---
+
+### 5. 플레이어 조작
+
+```js
+document.addEventListener('keydown', e => {
+  if (gameOver) return;
+  if (e.key === 'ArrowUp' && player.y > 0) player.y--;
+  if (e.key === 'ArrowDown' && player.y < mapH - 1) player.y++;
+  if (e.key === 'ArrowLeft' && player.x > 0) player.x--;
+  if (e.key === 'ArrowRight' && player.x < mapW - 1) player.x++;
+  update();
+  draw();
+});
+```
+
+- 방향키(↑, ↓, ←, →)로 한 칸씩 이동
+- 이동 후 충돌/수집 여부 체크
+
+---
+
+### 6. 게임 재시작
+
+```js
+restartBtn.onclick = function() {
+  // 게임 상태 초기화
+  player = { x: 2, y: 2 };
+  items = [
+    { x: 6, y: 4, type: 'cross' },
+    { x: 10, y: 2, type: 'bible' },
+    { x: 3, y: 7, type: 'cross' },
+    { x: 8, y: 6, type: 'bible' }
+  ];
+  score = 0;
+  // 나무 재생성
+  trees = [];
+  for (let y = 0; y < mapH; y++) {
+    for (let x = 0; x < mapW; x++) {
+      if (Math.random() < 0.08) trees.push({x, y});
+    }
+  }
+  gameOver = false;
+  document.getElementById('score').textContent = '점수: 0';
+  restartBtn.style.display = 'none';
+  draw();
+}
+```
+
+- 초기 상태로 리셋 후, **다시 시작**
+- 나무(🌲)도 새롭게 랜덤 배치됨
+
+---
+
+## 게임 플레이 방법
+
+1. **방향키(↑, ↓, ←, →)** 로 소년을 이동합니다.
+2. 숲 속에 흩어진 **아이템(✝️, 📖)** 을 모두 모으세요.
+3. **나무(🌲)** 에 부딪히면 게임 오버입니다.
+4. 모든 아이템을 모으면 클리어!\
+   → '다시 시작하기' 버튼으로 재도전 가능.
+
+---
