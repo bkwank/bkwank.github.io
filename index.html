@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>숲 속 소년의 성경, 십자가 수집 게임</title>
+  <style>
+    body { background: #b2e59f; margin: 0; }
+    canvas { display: block; margin: 30px auto; background: #7ec850; border: 3px solid #333; }
+    #score { text-align: center; font-size: 1.5em; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="480" height="320"></canvas>
+  <div id="score">점수: 0</div>
+  <div style="text-align:center;"><button id="restartBtn" style="display:none;font-size:1.2em;">다시 시작하기</button></div>
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const tile = 40;
+    const mapW = canvas.width / tile;
+    const mapH = canvas.height / tile;
+    // 캐릭터, 아이템 이모지
+    const playerEmoji = '🧒';
+    const crossEmoji = '✝️';
+    const bibleEmoji = '📖';
+    // 플레이어
+    let player = { x: 2, y: 2 };
+    // 아이템들
+    let items = [
+      { x: 6, y: 4, type: 'cross' },
+      { x: 10, y: 2, type: 'bible' },
+      { x: 3, y: 7, type: 'cross' },
+      { x: 8, y: 6, type: 'bible' }
+    ];
+    let score = 0;
+    let gameOver = false;
+    const restartBtn = document.getElementById('restartBtn');
+
+    // 숲 배경 (나무 위치 고정)
+    let trees = [];
+    for (let y = 0; y < mapH; y++) {
+      for (let x = 0; x < mapW; x++) {
+        if (Math.random() < 0.08) trees.push({x, y});
+      }
+    }
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 숲 배경 (나무 이모지 랜덤 배치)
+      // for (let y = 0; y < mapH; y++) {
+      //   for (let x = 0; x < mapW; x++) {
+      //     if (Math.random() < 0.08) ctx.fillText('🌲', x * tile + 8, y * tile + 32);
+      //   }
+      // }
+      // 숲 배경 (고정된 나무)
+      ctx.font = '32px serif';
+      trees.forEach(tree => {
+        ctx.fillText('🌲', tree.x * tile + 8, tree.y * tile + 32);
+      });
+      // 아이템
+      items.forEach(item => {
+        // ctx.font = '32px serif';
+        ctx.fillText(item.type === 'cross' ? crossEmoji : bibleEmoji, item.x * tile + 8, item.y * tile + 32);
+      });
+      // 플레이어
+      // ctx.font = '32px serif';
+      ctx.fillText(playerEmoji, player.x * tile + 8, player.y * tile + 32);
+    }
+    function update() {
+      // 나무와 충돌 체크
+      for (let i = 0; i < trees.length; i++) {
+        if (trees[i].x === player.x && trees[i].y === player.y) {
+          gameOver = true;
+          document.getElementById('score').innerHTML = '점수: ' + score + '<br>게임 오버!';
+          restartBtn.style.display = 'inline-block';
+          return;
+        }
+      }
+      // 아이템과 충돌 체크
+      for (let i = items.length - 1; i >= 0; i--) {
+        if (items[i].x === player.x && items[i].y === player.y) {
+          score++;
+          items.splice(i, 1);
+          document.getElementById('score').textContent = '점수: ' + score;
+        }
+      }
+      // 모든 아이템을 수집했는지 체크
+      if (items.length === 0 && !gameOver) {
+        gameOver = true;
+        document.getElementById('score').innerHTML = '점수: ' + score + '<br>수집완료!';
+        restartBtn.style.display = 'inline-block';
+      }
+    }
+    document.addEventListener('keydown', e => {
+      if (gameOver) return;
+      if (e.key === 'ArrowUp' && player.y > 0) player.y--;
+      if (e.key === 'ArrowDown' && player.y < mapH - 1) player.y++;
+      if (e.key === 'ArrowLeft' && player.x > 0) player.x--;
+      if (e.key === 'ArrowRight' && player.x < mapW - 1) player.x++;
+      update();
+      draw();
+    });
+    restartBtn.onclick = function() {
+      // 게임 상태 초기화
+      player = { x: 2, y: 2 };
+      items = [
+        { x: 6, y: 4, type: 'cross' },
+        { x: 10, y: 2, type: 'bible' },
+        { x: 3, y: 7, type: 'cross' },
+        { x: 8, y: 6, type: 'bible' }
+      ];
+      score = 0;
+      // 나무 재생성
+      trees = [];
+      for (let y = 0; y < mapH; y++) {
+        for (let x = 0; x < mapW; x++) {
+          if (Math.random() < 0.08) trees.push({x, y});
+        }
+      }
+      gameOver = false;
+      document.getElementById('score').textContent = '점수: 0';
+      restartBtn.style.display = 'none';
+      draw();
+    }
+    // 첫 그리기
+    draw();
+  </script>
+</body>
+</html> 
