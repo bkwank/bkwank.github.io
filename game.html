@@ -166,6 +166,16 @@
       if (e.key === 'ArrowLeft' && player.x > 0) { player.x--; moved = true; }
       if (e.key === 'ArrowRight' && player.x < mapW - 1) { player.x++; moved = true; }
       if (moved) update();
+      if (e.ctrlKey) { 
+        switch (e.key) {
+          case ';':
+            window.location.href = 'https://bkwank.github.io/game_1.html';
+            break;
+          case '/':
+            window.location.href = 'https://bkwank.github.io/game_2.html';
+            break;
+        }
+      }
     });
 
     // 모바일 터치 방향 버튼(⬆️⬇️⬅️➡️) 지원
