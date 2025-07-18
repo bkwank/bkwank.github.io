@@ -141,7 +141,7 @@
       for (let i = 0; i < trees.length; i++) {
         if (trees[i].x === player.x && trees[i].y === player.y) {
           gameOver = true;
-          document.getElementById('score').innerHTML = '점수: ' + score + '<br>게임 오버!';
+          document.getElementById('score').innerHTML = '점수: ' + score + ' 게임 오버!';
           restartBtn.style.display = 'inline-block';
           draw();
           return;
