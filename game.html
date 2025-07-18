@@ -158,7 +158,7 @@
       // 모든 아이템을 수집했는지 체크
       if (items.length === 0 && !gameOver) {
         gameOver = true;
-        document.getElementById('score').innerHTML = '점수: ' + score + '<br>수집완료!';
+        document.getElementById('score').innerHTML = '점수: ' + score + ' 수집완료!';
         restartBtn.style.display = 'inline-block';
         draw();
         return;
