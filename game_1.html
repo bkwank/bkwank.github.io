@@ -197,6 +197,17 @@
         else if (e.key === 'a' || e.key === 'A') { pidx=1; dx=-1; dy=0; }
         else if (e.key === 'd' || e.key === 'D') { pidx=1; dx=1; dy=0; }
         if (pidx >= 0 && !gameOver) movePlayer(pidx, dx, dy);
+        
+        if (e.ctrlKey) { 
+          switch (e.key) {
+            case ';':
+              window.location.href = 'https://bkwank.github.io/game_1.html';
+              break;
+            case '/':
+              window.location.href = 'https://bkwank.github.io/game_2.html';
+              break;
+          }
+        }
       });
       // 모바일 터치 방향 버튼 (Player1만 지원)
       document.querySelectorAll('.dir-btn').forEach(btn => {
