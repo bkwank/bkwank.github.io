@@ -139,6 +139,7 @@
       });
       ctx.drawImage(playerImg1, players[0].x * tile, players[0].y * tile, tile, tile*1.3);
       ctx.drawImage(playerImg2, players[1].x * tile, players[1].y * tile, tile, tile*1.3);
+        drawBackground(ctx, canvas.width, canvas.height); // 배경 먼저 그림
     }
 
     function updateScore(txt) {
@@ -233,6 +234,19 @@
       players[pid].x = nx; players[pid].y = ny;
       checkCollision(pid);
       drawAll();
+    }
+    
+    // 배경 패턴 그리기 함수 추가
+    function drawBackground(ctx, width, height) {
+      const tileSize = 32; // 타일 한 변의 크기 (조절 가능)
+      for (let y = 0; y < height; y += tileSize) {
+        for (let x = 0; x < width; x += tileSize) {
+          // 60% 잔디, 40% 흙 (확률 조절 가능)
+          const isGrass = Math.random() < 0.6;
+          ctx.fillStyle = isGrass ? '#a4e672' : '#b5895b';
+          ctx.fillRect(x, y, tileSize, tileSize);
+        }
+      }
     }
 
     // --- 이미지 로딩 후 시작 ---
