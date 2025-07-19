@@ -5,7 +5,7 @@
   <title>2인용 숲 속 소년의 전도 여행 게임</title>
   <style>
     body { background: #b2e59f; margin: 0; }
-    canvas { display: block; margin: 30px auto; background: #7ec850; border: 3px solid #333; touch-action: none; }
+    canvas { display: block; margin: 30px auto; background-color: #7ec850; border: 3px solid #333; touch-action: none;background-image: url("http://bkwank.github.io/g7yl073hIkCICZlSkfZIqNnPs8iMtX5rC__-VXniO6zjeEVzKITSdHga-1UaRIsPm_i8xrfgx08xJSrxDxIYhg.jpg"); }
     #score { text-align: center; font-size: 1.5em; margin-top: 10px; }
     #touch-controls { user-select:none; }
     .dir-btn {
@@ -132,12 +132,12 @@
     // --- 그리기 ---
     function drawAll() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground(ctx, canvas.width, canvas.height); // 배경 먼저 그림
       trees.forEach(tree => ctx.drawImage(treeImg, tree.x * tile, tree.y * tile, tile, tile));
       items.forEach(item => {
         if (item.type === 'cross') ctx.drawImage(crossImg, item.x * tile + 4, item.y * tile + 4, tile*0.8, tile*0.8);
         else ctx.drawImage(bibleImg, item.x * tile + 4, item.y * tile + 4, tile*0.8, tile*0.8);
       });
+      // drawBackground(ctx, canvas.width, canvas.height); // 배경 먼저 그림
       ctx.drawImage(playerImg1, players[0].x * tile, players[0].y * tile, tile, tile*1.3);
       ctx.drawImage(playerImg2, players[1].x * tile, players[1].y * tile, tile, tile*1.3);
     }
