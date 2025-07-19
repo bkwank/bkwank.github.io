@@ -27,18 +27,18 @@
   </style>
 </head>
 <body>
-  <canvas id="game" width="960" height="640"></canvas>
   <div id="score">점수: 0</div>
   <div id="playerscore"></div>
   <div style="text-align:center;">
     <button id="restartBtn" style="display:none;font-size:1.2em;">다시 시작하기 (엔터)</button>
   </div>
-  <div id="touch-controls" style="text-align:center; margin-top:8px;">
+  <canvas id="game" width="960" height="640"></canvas>
+  <!-- div id="touch-controls" style="text-align:center; margin-top:8px;">
     <button class="dir-btn" data-dir="up">⬆️</button><br>
     <button class="dir-btn" data-dir="left">⬅️</button>
     <button class="dir-btn" data-dir="down">⬇️</button>
     <button class="dir-btn" data-dir="right">➡️</button>
-  </div>
+</div -->
   <script>
     // --- 기본 상수, 자원 ---
     const canvas = document.getElementById('game');
@@ -126,13 +126,13 @@
       updateScore('점수: 0');
       updatePlayerScore();
       restartBtn.style.display = 'none';
+      drawBackground(ctx, canvas.width, canvas.height); // 배경 먼저 그림
       drawAll();
     }
 
     // --- 그리기 ---
     function drawAll() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawBackground(ctx, canvas.width, canvas.height); // 배경 먼저 그림
       trees.forEach(tree => ctx.drawImage(treeImg, tree.x * tile, tree.y * tile, tile, tile));
       items.forEach(item => {
         if (item.type === 'cross') ctx.drawImage(crossImg, item.x * tile + 4, item.y * tile + 4, tile*0.8, tile*0.8);
